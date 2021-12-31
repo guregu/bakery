@@ -1,0 +1,5 @@
+// ambient test data, as might be seen in a request
+
+proj(#ambient, "proj1");
+team(#ambient, "team1");
+org(#ambient, "org1");

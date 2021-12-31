@@ -1,0 +1,3 @@
+// querying this rule tells us all the secrets we can see
+
+can_view_secrets(#authority, $user, $obj) <- can_view_secrets(#authority, $user, $obj);

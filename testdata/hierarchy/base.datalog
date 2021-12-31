@@ -1,0 +1,55 @@
+// this models a GitLab-esque hierarchy with cascading access rights
+// an organization can have many teams, which can have many projects
+// a user can be a member of any of these
+
+// facts (normally these would get added programatically by your biscuit-making authority)
+user(#authority, "user1");
+org_member(#authority, "user1", "org1", #admin);
+team(#authority, "team1", "org1");
+proj(#authority, "proj1", "team1");
+
+// rules
+org_access(#authority, $user, $org, $role) <-
+	org_member(#authority, $user, $org, $role);
+
+team_access(#authority, $user, $team, $role) <-
+	team_member(#authority, $user, $team, $role);
+
+team_access(#authority, $user, $team, $role) <-
+	team(#authority, $team, $org),
+	org_member(#authority, $user, $org, $role);
+
+proj_access(#authority, $user, $proj, $role) <-
+	proj_member(#authority, $user, $proj, $role);
+
+proj_access(#authority, $user, $proj, $role) <-
+	proj(#authority, $proj, $team),
+	team_member(#authority, $user, $team, $role);
+
+proj_access(#authority, $user, $proj, $role) <-
+	proj(#authority, $proj, $team),
+	team(#authority, $team, $org),
+	org_member(#authority, $user, $org, $role);
+
+can_view_secrets(#authority, $user, $org) <-
+	org(#ambient, $org),
+	org_access(#authority, $user, $org, $role)
+	@ $role in [#admin];
+
+can_view_secrets(#authority, $user, $team) <-
+	team(#ambient, $team),
+	team_access(#authority, $user, $team, $role)
+	@ $role in [#admin];
+
+can_view_secrets(#authority, $user, $proj) <-
+	proj(#ambient, $proj),
+	proj_access(#authority, $user, $proj, $role)
+	@ $role in [#admin];
+
+// caveats
+[
+	access(#authority) <-
+		user(#authority, $user),
+		proj(#ambient, $proj),
+		proj_access(#authority, $user, $proj, $role)
+];
